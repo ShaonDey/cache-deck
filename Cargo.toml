@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "A desktop client for Redis and Valkey"
 authors = ["Shaon Dey"]
+license = "MIT"
 homepage = "https://github.com/ShaonDey"
 readme = "README.md"
 build = "packaging/windows/build.rs"
@@ -51,6 +52,25 @@ assets = [
     ["assets/app-icon/png/icon-512.png", "usr/share/icons/hicolor/512x512/apps/cache-deck.png", "644"],
     ["assets/app-icon/icon.svg", "usr/share/icons/hicolor/scalable/apps/cache-deck.svg", "644"],
     ["README.md", "usr/share/doc/cache-deck/README.md", "644"],
+]
+
+# Linux .rpm package: `cargo install cargo-generate-rpm`, `cargo build --release`,
+# `strip -s target/release/cache-deck`, then `cargo generate-rpm`.
+# Keep this file list the same as the .deb list above.
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/cache-deck", dest = "/usr/bin/cache-deck", mode = "755" },
+    { source = "packaging/linux/cache-deck.desktop", dest = "/usr/share/applications/cache-deck.desktop", mode = "644" },
+    { source = "assets/app-icon/png/icon-16.png", dest = "/usr/share/icons/hicolor/16x16/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/png/icon-32.png", dest = "/usr/share/icons/hicolor/32x32/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/png/icon-48.png", dest = "/usr/share/icons/hicolor/48x48/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/png/icon-64.png", dest = "/usr/share/icons/hicolor/64x64/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/png/icon-128.png", dest = "/usr/share/icons/hicolor/128x128/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/png/icon-256.png", dest = "/usr/share/icons/hicolor/256x256/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/png/icon-512.png", dest = "/usr/share/icons/hicolor/512x512/apps/cache-deck.png", mode = "644" },
+    { source = "assets/app-icon/icon.svg", dest = "/usr/share/icons/hicolor/scalable/apps/cache-deck.svg", mode = "644" },
+    { source = "README.md", dest = "/usr/share/doc/cache-deck/README.md", mode = "644", doc = true },
+    { source = "LICENSE", dest = "/usr/share/licenses/cache-deck/LICENSE", mode = "644" },
 ]
 
 [profile.release]
