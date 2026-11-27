@@ -3,6 +3,7 @@
 
 # Built app packages (attach these to a GitHub Release instead)
 /dist/
+/out/
 
 # Local test pictures
 /shots/

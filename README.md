@@ -29,8 +29,15 @@ cargo run --release
 ### Mac app
 
 ```sh
-sh packaging/macos/bundle.sh   # builds dist/Cache Deck.app
+sh packaging/macos/bundle.sh   # builds dist/Cache Deck.app for this Mac's chip
 open "dist/Cache Deck.app"
+```
+
+For a disk image that runs on both Apple Silicon and Intel Macs:
+
+```sh
+rustup target add aarch64-apple-darwin x86_64-apple-darwin   # once
+sh packaging/macos/dmg.sh      # builds dist/cache-deck-<version>-macos-universal.dmg
 ```
 
 The package carries the app's name, icon and About details. It is signed only for the Mac it was built on ("ad hoc"). To share it with other people it needs a Developer ID signature and notarization.
@@ -45,15 +52,25 @@ cargo build --release       # target\release\cache-deck.exe
 
 Release builds open no console window, so `--help` and error messages print nothing there. Debug builds (`cargo build`) keep the console.
 
+The installer is made with [Inno Setup](https://jrsoftware.org/isinfo.php) from `packaging/windows/installer.iss`:
+
+```sh
+iscc /DAppVersion=0.1.0 packaging\windows\installer.iss   # out\cache-deck-0.1.0-windows-x86_64-setup.exe
+```
+
+It installs for the current user without an administrator password, and adds a Start Menu entry and an uninstaller.
+
 ### Linux
 
 ```sh
 cargo build --release       # target/release/cache-deck
-cargo install cargo-deb     # once
-cargo deb                   # target/debian/cache-deck_<version>_amd64.deb
+strip -s target/release/cache-deck
+cargo install cargo-deb cargo-generate-rpm   # once
+cargo deb --no-build        # target/debian/cache-deck_<version>_<arch>.deb
+cargo generate-rpm          # target/generate-rpm/cache-deck-<version>-1.<arch>.rpm
 ```
 
-The `.deb` installs the program, an app-menu entry (`packaging/linux/cache-deck.desktop`) and the icon. Building needs the usual window-system development libraries; on Debian or Ubuntu:
+The `.deb` (Debian, Ubuntu) and the `.rpm` (Fedora, Red Hat, openSUSE) install the program, an app-menu entry (`packaging/linux/cache-deck.desktop`) and the icon. Building needs the usual window-system development libraries; on Debian or Ubuntu:
 
 ```sh
 sudo apt-get install libxkbcommon-dev libwayland-dev libgl1-mesa-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
@@ -63,11 +80,12 @@ sudo apt-get install libxkbcommon-dev libwayland-dev libgl1-mesa-dev libxcb-rend
 
 `.github/workflows/release.yml` builds all three systems on GitHub's own machines:
 
-| System | File |
-|---|---|
-| Windows (x86_64) | `cache-deck-<version>-windows-x86_64.zip` holding `Cache Deck.exe` |
-| Linux (x86_64) | `cache-deck_<version>_amd64.deb` and `cache-deck-<version>-linux-x86_64.tar.gz` |
-| macOS (Apple Silicon) | `cache-deck-<version>-macos-arm64.zip` holding `Cache Deck.app` |
+| System | Chip | Files |
+|---|---|---|
+| Windows | x86_64 | `cache-deck-<version>-windows-x86_64-setup.exe` (installer), `…-windows-x86_64.exe` (the program by itself), `…-windows-x86_64.zip` (the program and README) |
+| Linux | x86_64 | `cache-deck_<version>_amd64.deb`, `cache-deck-<version>-1.x86_64.rpm`, `cache-deck-<version>-linux-x86_64.tar.gz` |
+| Linux | ARM | `cache-deck_<version>_arm64.deb`, `cache-deck-<version>-1.aarch64.rpm`, `cache-deck-<version>-linux-arm64.tar.gz` |
+| macOS | Apple Silicon and Intel | `cache-deck-<version>-macos-universal.dmg` |
 
 - **To release:** set the version in `Cargo.toml`, then push a matching tag (`v0.1.0` for version `0.1.0`). The workflow creates a draft release with the files attached; press Publish on GitHub when it looks right.
 - **To try the builds without releasing:** run the workflow by hand from the Actions tab. The files stay attached to that run.
@@ -119,10 +137,11 @@ src/
     macos.rs      fills the macOS "About Cache Deck" window
 assets/app-icon/  the icon as SVG, PNG sizes, .icns and .ico
 packaging/
-  macos/          Mac app packaging (Info.plist template, credits, bundle script)
+  macos/          Mac app packaging (Info.plist template, credits, bundle and disk-image scripts)
   linux/          app-menu entry for Linux (cache-deck.desktop)
-  windows/        build.rs: puts the icon and version details into the .exe
+  windows/        build.rs puts the icon and version details into the .exe; installer.iss builds the installer
 .github/workflows/release.yml   builds Windows, Linux and macOS files for a release
+LICENSE           MIT licence
 ```
 
 Built with [egui/eframe](https://github.com/emilk/egui) and [redis-rs](https://github.com/redis-rs/redis-rs).
@@ -134,5 +153,9 @@ Cache Deck was first built with Craft Anything 0.6.1, a desktop tool from the Ar
 ## Developer
 
 **Shaon Dey**: [github.com/ShaonDey](https://github.com/ShaonDey)
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
 
 Redis is a trademark of Redis Ltd. Valkey is a trademark of the Linux Foundation. Cache Deck is an independent project and isn't affiliated with either.

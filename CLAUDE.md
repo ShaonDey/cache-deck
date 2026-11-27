@@ -11,7 +11,9 @@ cargo test                          # unit tests
 CACHE_DECK_TEST_PORT=6391 cargo test   # also live edit tests against a scratch server (uses db 5, FLUSHDB)
 cargo clippy && cargo fmt           # must be clean; rustfmt.toml sets max_width = 120
 sh packaging/macos/bundle.sh        # dist/Cache Deck.app (release build, ad-hoc signed)
+sh packaging/macos/dmg.sh           # dist/cache-deck-<version>-macos-universal.dmg (needs both Mac Rust targets)
 cargo deb                           # Linux only: target/debian/*.deb (needs `cargo install cargo-deb`)
+cargo generate-rpm                  # Linux only: target/generate-rpm/*.rpm (needs `cargo install cargo-generate-rpm`)
 ```
 
 Slash commands in `.claude/commands/`: `/screenshot`, `/test-live`, `/bundle-mac`, `/check`.
@@ -30,10 +32,12 @@ Slash commands in `.claude/commands/`: `/screenshot`, `/test-live`, `/bundle-mac
 
 Per-system packaging files live in `packaging/<system>/`. The build script is `packaging/windows/build.rs`, not a `build.rs` at the root; `build = ...` in `Cargo.toml` points Cargo at it. `.github/` stays at the root because GitHub only looks there.
 
-- macOS: `packaging/macos/bundle.sh` builds `dist/Cache Deck.app` from `packaging/macos/Info.plist.in` and the `.icns` icon.
+- macOS: `packaging/macos/bundle.sh` builds `dist/Cache Deck.app` from `packaging/macos/Info.plist.in` and the `.icns` icon. With `--universal` it builds both chips and merges them with `lipo`. `packaging/macos/dmg.sh` wraps the universal app in `dist/cache-deck-<version>-macos-universal.dmg`.
+- Windows installer: `packaging/windows/installer.iss` (Inno Setup, per-user install, no admin prompt). Never change its `AppId`, or an update installs beside the old version instead of replacing it.
+- Linux packages: `[package.metadata.deb]` and `[package.metadata.generate-rpm]` in `Cargo.toml` hold the same file list in two syntaxes. Change both together.
 - Windows: `packaging/windows/build.rs` puts `assets/app-icon/icon.ico` and the version details into the `.exe` through the `winresource` build dependency. That dependency is only compiled when the build runs on Windows, so the Windows build is never cross-compiled. `main.rs` sets `windows_subsystem = "windows"` for release builds (no console window, so no `--help` output there).
 - Linux: `packaging/linux/cache-deck.desktop` is the app-menu entry. Its file name and `StartupWMClass` must stay equal to the `with_app_id("cache-deck")` value in `main.rs`, or the window loses its icon on Wayland. `[package.metadata.deb]` in `Cargo.toml` lists what the `.deb` installs.
-- `.github/workflows/release.yml` builds all three on GitHub's machines (Windows x86_64 `.zip`, Linux x86_64 `.deb` and `.tar.gz`, macOS arm64 `.zip`). A pushed tag `v<version>` must match the `Cargo.toml` version and ends in a draft release; a run by hand only builds. It builds with `--locked`, so commit `Cargo.lock` whenever dependencies change.
+- `.github/workflows/release.yml` builds all three on GitHub's machines (Windows x86_64 installer, bare `.exe` and `.zip`; Linux x86_64 and arm64 `.deb`, `.rpm` and `.tar.gz`; macOS universal `.dmg`). A pushed tag `v<version>` must match the `Cargo.toml` version and ends in a draft release; a run by hand only builds. It builds with `--locked`, so commit `Cargo.lock` whenever dependencies change.
 - The Windows and Linux builds have not been run on real machines yet. Say so when reporting on them.
 
 ## Rules
@@ -45,7 +49,7 @@ Per-system packaging files live in `packaging/<system>/`. The build script is `p
 - Anything that deletes data (key, field, member, connection) asks first through the `Confirm` dialog, except removing single items inside a value.
 - Colours come only from `Palette`. Red (`p.error`) is reserved for errors, deletes and the PROD tag.
 - Visible app name is always "Cache Deck"; the crate and binary name is `cache-deck`.
-- Developer details (Shaon Dey, https://github.com/ShaonDey, © 2026) live in `DEVELOPER` / `GITHUB_URL` in `app.rs`, in `src/platform/macos.rs`, in `packaging/macos/`, in `packaging/windows/build.rs` and in `Cargo.toml` (`authors`, `homepage`, `[package.metadata.deb]`). Don't change them without the owner.
+- Developer details (Shaon Dey, https://github.com/ShaonDey, © 2026) live in `DEVELOPER` / `GITHUB_URL` in `app.rs`, in `src/platform/macos.rs`, in `packaging/macos/`, in `packaging/windows/build.rs`, in `packaging/windows/installer.iss`, in `LICENSE` and in `Cargo.toml` (`authors`, `homepage`, `[package.metadata.deb]`). Don't change them without the owner.
 - Test changes that touch server traffic against both Valkey and Redis. Note: Homebrew's `redis-server` is Valkey, so use `docker run -p 127.0.0.1:6393:6379 redis:7-alpine` for real Redis.
 - Don't use Redis or Valkey logos or red-key imagery; the icon is our own (assets/app-icon/icon.svg).
 
