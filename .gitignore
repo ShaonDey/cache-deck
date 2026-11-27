@@ -1,0 +1,40 @@
+# Build output
+/target/
+
+# Built app packages (attach these to a GitHub Release instead)
+/dist/
+
+# Local test pictures
+/shots/
+
+# AI Tools
+/docs/
+/openspec/
+/graphify-out/
+/.superpowers/
+/CLAUDE.local.md
+/.claude/settings.local.json
+/.claude/worktrees/
+
+# Craft Anything project state (lives beside app/, never in the repo)
+/craft.json
+/feed.json
+/questions.json
+/usage.json
+/agent-session.jsonl
+/build-activity.log
+/inbox/
+/checks/
+/capture/
+/reference/
+/pinned/
+/attachments/
+*.cany/
+
+# macOS
+.DS_Store
+
+# Editors
+.idea/
+*.swp
+*~

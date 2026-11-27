@@ -1,0 +1,57 @@
+[package]
+name = "cache-deck"
+version = "0.1.0"
+edition = "2024"
+description = "A desktop client for Redis and Valkey"
+authors = ["Shaon Dey"]
+homepage = "https://github.com/ShaonDey"
+readme = "README.md"
+build = "packaging/windows/build.rs"
+keywords = ["redis", "valkey", "gui", "desktop", "cache"]
+categories = ["gui", "database"]
+
+[dependencies]
+dirs = "7.0.0"
+eframe = "0.37"
+image = { version = "0.25", default-features = false, features = ["png"] }
+redis = { version = "1.8.3", features = ["tls-rustls", "tls-rustls-webpki-roots", "tls-rustls-insecure"] }
+# The TLS library behind `redis`. Listed here only to pick its crypto backend (`ring`);
+# without one, every secure connection panics. main.rs installs it at startup.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+winit = "0.30"
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-app-kit = "0.3"
+
+# Used by packaging/windows/build.rs to put the icon and version details into the Windows .exe.
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+# Linux .deb package: `cargo install cargo-deb`, then `cargo deb`.
+[package.metadata.deb]
+name = "cache-deck"
+maintainer = "Shaon Dey"
+copyright = "2026, Shaon Dey"
+section = "database"
+priority = "optional"
+extended-description = "Cache Deck connects to Redis and Valkey servers: a dashboard of all saved servers, a key browser, a value editor, a command box and server info."
+assets = [
+    ["target/release/cache-deck", "usr/bin/", "755"],
+    ["packaging/linux/cache-deck.desktop","usr/share/applications/", "644"],
+    ["assets/app-icon/png/icon-16.png", "usr/share/icons/hicolor/16x16/apps/cache-deck.png", "644"],
+    ["assets/app-icon/png/icon-32.png", "usr/share/icons/hicolor/32x32/apps/cache-deck.png", "644"],
+    ["assets/app-icon/png/icon-48.png", "usr/share/icons/hicolor/48x48/apps/cache-deck.png", "644"],
+    ["assets/app-icon/png/icon-64.png", "usr/share/icons/hicolor/64x64/apps/cache-deck.png", "644"],
+    ["assets/app-icon/png/icon-128.png", "usr/share/icons/hicolor/128x128/apps/cache-deck.png", "644"],
+    ["assets/app-icon/png/icon-256.png", "usr/share/icons/hicolor/256x256/apps/cache-deck.png", "644"],
+    ["assets/app-icon/png/icon-512.png", "usr/share/icons/hicolor/512x512/apps/cache-deck.png", "644"],
+    ["assets/app-icon/icon.svg", "usr/share/icons/hicolor/scalable/apps/cache-deck.svg", "644"],
+    ["README.md", "usr/share/doc/cache-deck/README.md", "644"],
+]
+
+[profile.release]
+opt-level = 3

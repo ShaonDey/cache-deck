@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Cache Deck
+GenericName=Redis and Valkey Client
+Comment=A desktop client for Redis and Valkey
+Exec=cache-deck
+Icon=cache-deck
+Terminal=false
+Categories=Development;Database;
+Keywords=redis;valkey;cache;database;keys;
+StartupWMClass=cache-deck

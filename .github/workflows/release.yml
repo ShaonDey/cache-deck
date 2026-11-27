@@ -1,0 +1,129 @@
+name: Release
+
+# Builds Cache Deck for Windows, Linux and macOS, each on its own system.
+#
+# - Push a tag like v0.1.0: builds everything, then creates a draft GitHub Release with
+#   the files attached. Open the draft on GitHub and press Publish when it looks right.
+# - Run by hand (Actions tab > Release > Run workflow): builds only. The files stay
+#   attached to that run as artifacts, and no release is created.
+#
+# The tag has to match the version in Cargo.toml (tag v0.1.0 for version 0.1.0).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x86_64
+            os: windows-latest
+          # An older Ubuntu on purpose: a program built here also runs on newer systems,
+          # but not the other way round. Move to a newer image when this one is retired.
+          - name: linux-x86_64
+            os: ubuntu-22.04
+          - name: macos-arm64
+            os: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read the version from Cargo.toml
+        run: |
+          VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "v$VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the Cargo.toml version $VERSION"
+            exit 1
+          fi
+
+      - name: Update Rust
+        run: rustup update stable && rustup default stable
+
+      # ---------- Windows: a .zip holding "Cache Deck.exe" ----------
+      - name: Build and package (Windows)
+        if: runner.os == 'Windows'
+        env:
+          # Build the C runtime into the .exe, so it runs without the Visual C++ runtime installed.
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: |
+          cargo build --release --locked
+          DIR="cache-deck-$VERSION-windows-x86_64"
+          mkdir -p "out/$DIR"
+          cp target/release/cache-deck.exe "out/$DIR/Cache Deck.exe"
+          cp README.md "out/$DIR/"
+          (cd out && 7z a -tzip "$DIR.zip" "$DIR")
+          rm -r "out/$DIR"
+
+      # ---------- Linux: a .deb and a .tar.gz ----------
+      - name: Install Linux build libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libgl1-mesa-dev \
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+
+      - name: Build and package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cargo build --release --locked
+          cargo install cargo-deb --locked
+          mkdir -p out
+          cargo deb --no-build --output "out/cache-deck_${VERSION}_amd64.deb"
+          DIR="cache-deck-$VERSION-linux-x86_64"
+          mkdir -p "out/$DIR"
+          cp target/release/cache-deck README.md packaging/linux/cache-deck.desktop "out/$DIR/"
+          cp assets/app-icon/png/icon-256.png "out/$DIR/cache-deck.png"
+          tar -C out -czf "out/$DIR.tar.gz" "$DIR"
+          rm -r "out/$DIR"
+
+      # ---------- macOS: "Cache Deck.app" in a .zip (Apple Silicon, ad-hoc signed) ----------
+      - name: Build and package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          sh packaging/macos/bundle.sh
+          mkdir -p out
+          ditto -c -k --keepParent "dist/Cache Deck.app" "out/cache-deck-$VERSION-macos-arm64.zip"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: cache-deck-${{ matrix.name }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    name: Create the draft release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Create the draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" out/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Cache Deck ${GITHUB_REF_NAME#v}" \
+            --generate-notes \
+            --draft
