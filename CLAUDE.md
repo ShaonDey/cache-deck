@@ -53,16 +53,6 @@ Per-system packaging files live in `packaging/<system>/`. The build script is `p
 - Test changes that touch server traffic against both Valkey and Redis. Note: Homebrew's `redis-server` is Valkey, so use `docker run -p 127.0.0.1:6393:6379 redis:7-alpine` for real Redis.
 - Don't use Redis or Valkey logos or red-key imagery; the icon is our own (assets/app-icon/icon.svg).
 
-## Craft Anything
-
-Cache Deck was first built with Craft Anything 0.6.1, a desktop tool from the ArtCraft Team that turns a written request into a working app. It drives a coding agent as the builder (here Claude Code) and checks every build.
-
-- A Craft Anything project is a folder holding `app/` (the code, its own git repository) plus the tool's state: `craft.json`, `feed.json`, `questions.json`, `usage.json`, `agent-session.jsonl`, `build-activity.log`, `inbox/`, `checks/`, `capture/`, `reference/`, `pinned/`, `attachments/` and `investigation.cany/`. This repository started as a clone of the `app/` folder of the project named "Cache GUI".
-- This repository is now the source of truth. Make changes here, not in the Craft Anything copy.
-- On the owner's machine a git remote named `craft-anything` points at that `app/` folder. If Craft Anything builds there again, bring its commits over with `git pull craft-anything main`. Changes made here don't reach that copy by themselves.
-- Craft Anything runs two checks after each build: `build` (it builds the cargo project at the project root) and `app-screenshot` (it starts the program with `--screenshot <file>` and expects a drawn window). Keep both working: no extra build steps, and `--screenshot` must draw and quit by itself, without a server or any input.
-- Never copy Craft Anything's state files into this repository. They hold the whole agent conversation and the owner's questions and pictures. `.gitignore` lists them as a safeguard.
-
 ## egui 0.37 pitfalls we hit
 
 - API: `egui::Panel::left/right/top/bottom(..).show(ui, ..)`, `App::ui(&mut self, ui, frame)`, `Id::unique(..)` (`Id::new` is deprecated), `TextEdit::align(Align2)`, `CornerRadius` / `Margin` take integers.

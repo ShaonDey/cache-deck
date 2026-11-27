@@ -103,8 +103,6 @@ None of the files are signed with a paid certificate, so Windows shows a SmartSc
 | `--light` | Start in the light theme |
 | `--run <command>` | Run a command in the Commands tab after connecting (repeatable) |
 
-Craft Anything's build check also starts the app with `--screenshot`, so that option has to keep working without a server or any input.
-
 ## Settings
 
 Saved connections and the theme are stored in a JSON file that only your user account can read:
@@ -122,6 +120,10 @@ cargo test                                   # unit tests
 valkey-server --port 6391 --save "" --daemonize yes
 CACHE_DECK_TEST_PORT=6391 cargo test         # adds live edit tests (uses and empties database 5)
 ```
+
+## Contributing
+
+Bug reports, ideas and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, check and propose a change, and [SECURITY.md](SECURITY.md) for reporting a security problem privately.
 
 ## Project layout
 
@@ -145,10 +147,6 @@ LICENSE           MIT licence
 ```
 
 Built with [egui/eframe](https://github.com/emilk/egui) and [redis-rs](https://github.com/redis-rs/redis-rs).
-
-## How it was built
-
-Cache Deck was first built with Craft Anything 0.6.1, a desktop tool from the ArtCraft Team that turns a written request into a working app. It drove Claude Code as the builder and checked every build by compiling it and starting it with `--screenshot`. Development continues in this repository.
 
 ## Developer
 

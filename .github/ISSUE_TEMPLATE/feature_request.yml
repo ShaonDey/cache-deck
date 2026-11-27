@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest something Cache Deck should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The task or problem behind the idea. This matters more than the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+      description: How you imagine it working. A sketch or a screenshot from another tool is welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What do you do today instead?

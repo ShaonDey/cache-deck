@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in Cache Deck doesn't work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please **don't paste passwords, host names or key contents** from a real server. Replace them with placeholders.
+        For a security problem, don't open an issue: see the Security tab.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead? Include the exact error text if there was one.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Cache Deck version
+      description: Shown in the bottom-right corner and in the About box.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: System
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: server
+    attributes:
+      label: Server
+      description: Redis or Valkey, its version, and whether it is reached through TLS, a tunnel or a cloud service.
+      placeholder: "Valkey 8.1, TLS, through an SSH tunnel"
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots or terminal output, with private details removed.
